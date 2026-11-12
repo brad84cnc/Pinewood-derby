@@ -9,6 +9,7 @@ A single-file, offline race manager and TV display. No install, no internet need
 
 ## Running a race day
 1. **Setup**: rename/add classes (defaults: Lion, Tiger, Wolf, Bear, Webelos, Arrow of Light, X Class). Add cars with **+ Add car** or **+ Paste list of names** (car numbers auto-assign).
+   Click the 📷 box next to a car to add its photo: **Take photo** uses the laptop webcam, or **Choose file…** picks an image (e.g. a phone photo sent to the laptop). Photos are shrunk to about 480px and appear on the lane cards, the TV view and the standings.
 2. Click **Build heats** per class. With 3 lanes, every car runs once in each lane (heat *i* puts cars *i*, *i+1*, *i+2* in lanes 1, 2, 3). Classes with fewer than 3 cars get short heats. **Shuffle & build** randomizes matchups.
 3. **Race**: pick the class, type each lane's time and press `Enter` to jump to the next lane. `Enter` on the last lane saves the heat and loads the next one. Click any heat number to fix a result.
 4. **Standings**: choose how to rank — **Average time**, **Total time**, **Heat points** (1st=1, 2nd=2, 3rd=3; lowest wins) or **Fastest run**. Ties are broken by the secondary measure; exact ties share a place. Cars that haven't finished all runs show dashed provisional places.
