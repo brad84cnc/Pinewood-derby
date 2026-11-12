@@ -86,6 +86,9 @@ tr.p1 td.name,tr.p1 td.num{color:var(--gold);font-weight:700}
 .modal .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1rem;width:min(640px,100%)}
 .modal h3{margin:.1em 0 .6em}
 .modal video{width:100%;max-height:55vh;background:#000;border-radius:8px;margin-bottom:.6rem}
+.over{color:var(--bad)!important;font-weight:700}
+input.over{border-color:var(--bad);outline:1px solid var(--bad)}
+.carrow input.wt{width:5.5em;text-align:right}
 .big-empty{text-align:center;padding:3rem 1rem;color:var(--dim)}
 /* TV mode */
 body.tv header,body.tv .tabs{display:none}
@@ -101,6 +104,7 @@ body.tv .medal{font-size:1.1vw}
 body.tv .heatbar .big{font-size:2.6vw}
 body.tv .lane .nm{font-size:1.4vw}
 body.tv .pic{height:11vw}
+body.tv .lane .wt{font-size:1.2vw!important}
 body.tv .lane .ln{font-size:1vw}
 body.tv .chip{font-size:1vw}
 .tvbar{position:fixed;top:.6rem;right:.8rem;display:none;gap:.4rem;opacity:.15;transition:opacity .2s;z-index:5}
@@ -214,6 +218,9 @@ function computeStandings(cls, method) {
 }
 
 const fmt = (t, d = 3) => (typeof t === 'number' && isFinite(t)) ? t.toFixed(d) : '–';
+const parseWeight = s => { const n = parseFloat(String(s ?? '').trim().replace(',', '.')); return isFinite(n) && n > 0 ? n : null; };
+const isOver = (car, max) => { const w = parseWeight(car.weight), m = parseWeight(max); return w != null && m != null && q(w) > q(m); };
+const fmtWt = w => { const n = parseWeight(w); return n == null ? '' : (Math.round(n * 100) / 100) + ' oz'; };
 const parseTime = s => { const n = parseFloat(String(s).trim().replace(',', '.')); return isFinite(n) && n > 0 ? n : null; };
 // True when the car list no longer matches the cars the heats were built from.
 function heatsStale(cls) {
@@ -231,7 +238,7 @@ let S, view = location.hash === '#tv' ? 'tv' : 'race', stSel = null;
 
 function fresh() {
   const classes = DEFAULT_CLASSES.map(name => ({ id: uid(), name, cars: [], heats: [] }));
-  return { v: 1, title: 'Pinewood Derby', classes, active: classes[0].id, cur: {}, method: 'avg' };
+  return { v: 1, title: 'Pinewood Derby', classes, active: classes[0].id, cur: {}, method: 'avg', maxWeight: '5' };
 }
 function load() {
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.classes) return s; } catch (e) {}
@@ -289,7 +296,7 @@ function laneCards(c, hi, edit) {
     const body = edit
       ? `<input data-lane="${k}" inputmode="decimal" autocomplete="off" placeholder="0.000" value="${typeof t === 'number' ? t.toFixed(3) : ''}">`
       : `<div class="tm">${typeof t === 'number' ? fmt(t) : '&nbsp;'}</div>${pl[k] ? `<div class="pl">${['', '1st', '2nd', '3rd'][pl[k]] || pl[k] + 'th'}</div>` : ''}`;
-    return `<div class="lane${win}" style="--lc:${colors[k]}"><div class="ln">LANE ${k + 1}</div>${car.photo ? `<img class="pic" src="${car.photo}" alt="">` : ''}<div class="num">${esc(car.num)}</div><div class="nm">${esc(car.name) || '&nbsp;'}</div>${body}</div>`;
+    return `<div class="lane${win}" style="--lc:${colors[k]}"><div class="ln">LANE ${k + 1}</div>${car.photo ? `<img class="pic" src="${car.photo}" alt="">` : ''}<div class="num">${esc(car.num)}</div><div class="nm">${esc(car.name) || '&nbsp;'}</div><div class="wt${isOver(car, S.maxWeight) ? ' over' : ''}" style="min-height:1.3em;font-size:.9em">${fmtWt(car.weight)}${isOver(car, S.maxWeight) ? ' OVERWEIGHT' : ''}</div>${body}</div>`;
   }).join('') + `</div>`;
 }
 
@@ -350,13 +357,13 @@ function standingsTable(c) {
   const M = METHODS[S.method] || METHODS.avg;
   const rows = computeStandings(c, S.method);
   const cols = ['avg', 'total', 'best', 'points'];
-  const head = `<tr><th>Place</th><th>Car</th><th>Name</th><th>L1</th><th>L2</th><th>L3</th>` +
+  const head = `<tr><th>Place</th><th>Car</th><th>Name</th><th>Wt</th><th>L1</th><th>L2</th><th>L3</th>` +
     cols.map(k => `<th class="${M.col === k ? 'sorted' : ''}">${{ avg: 'Avg', total: 'Total', best: 'Best', points: 'Pts' }[k]}</th>`).join('') + `</tr>`;
   const body = rows.map(r => {
     const lane = [0, 1, 2].map(k => { const run = r.runs.find(x => x.lane === k); return `<td>${run ? fmt(run.time) : ''}</td>`; }).join('');
     const med = r.place ? `<span class="medal ${r.provisional ? 'prov' : 'p' + r.place}">${r.place}</span>` : '';
     const v = { avg: fmt(r.done ? r.avg : null, 4), total: fmt(r.done ? r.total : null), best: fmt(r.done ? r.best : null), points: r.done ? r.points : '–' };
-    return `<tr class="${r.provisional ? 'prov' : ''} ${!r.provisional && r.place === 1 ? 'p1' : ''}"><td>${med}</td><td class="num">#${esc(r.car.num)}</td><td class="name">${r.car.photo ? `<img class="thumb" src="${r.car.photo}" alt="">` : ''}${esc(r.car.name)}${r.provisional && r.done ? ` <span class="muted">(${r.done}/${r.expected})</span>` : ''}</td>${lane}` +
+    return `<tr class="${r.provisional ? 'prov' : ''} ${!r.provisional && r.place === 1 ? 'p1' : ''}"><td>${med}</td><td class="num">#${esc(r.car.num)}</td><td class="name">${r.car.photo ? `<img class="thumb" src="${r.car.photo}" alt="">` : ''}${esc(r.car.name)}${r.provisional && r.done ? ` <span class="muted">(${r.done}/${r.expected})</span>` : ''}</td><td class="${isOver(r.car, S.maxWeight) ? 'over' : ''}">${fmtWt(r.car.weight).replace(' oz', '')}</td>${lane}` +
       cols.map(k => `<td class="${M.col === k ? 'sorted' : ''}">${v[k]}</td>`).join('') + `</tr>`;
   }).join('');
   return `<table>${head}${body}</table>`;
@@ -392,14 +399,20 @@ function renderOverall() {
   <div class="card"><h2>Fastest runs of the day</h2>${runs.length ? `<table><tr><th>#</th><th>Class</th><th>Car</th><th>Lane</th><th>Time</th></tr>${fast}</table>` : '<span class="muted">No times yet.</span>'}</div>`;
 }
 
+function overBanner() {
+  const over = S.classes.flatMap(c => c.cars.filter(x => isOver(x, S.maxWeight)).map(x => `#${esc(x.num)} ${esc(x.name)} (${esc(fmtWt(x.weight))})`));
+  return over.length ? `<div class="warn">Over ${esc(S.maxWeight)} oz: ${over.join(', ')}</div>` : '';
+}
 function renderSetup() {
   const c = cls();
   return `<div class="card"><h2>Event</h2><div class="row"><label>Title <input id="title" value="${esc(S.title)}" size="30"></label>
+    <label>Max weight (oz) <input id="maxw" value="${esc(S.maxWeight ?? '5')}" size="4" inputmode="decimal" title="Leave blank for no limit"></label>
     <span class="spacer"></span>
     <button class="btn" data-act="export">⬇ Export backup</button>
     <button class="btn" data-act="import">⬆ Import backup</button>
     <button class="btn danger" data-act="reset">Reset event</button>
     <input type="file" id="file" accept="application/json" hidden></div></div>` +
+    `<div id="overbanner">${overBanner()}</div>` +
     S.classes.map(c => {
       const hasTimes = c.heats.some(h => h.times.some(t => typeof t === 'number'));
       return `<div class="setup-class" data-cid="${c.id}">
@@ -410,7 +423,7 @@ function renderSetup() {
           <button class="btn small" data-act="shuffle" data-id="${c.id}">Shuffle &amp; build</button>
           <button class="btn small danger" data-act="del-class" data-id="${c.id}">Delete class</button></div>
         ${heatsStale(c) ? '<div class="warn">Car list changed — rebuild heats.</div>' : ''}
-        ${c.cars.map(x => `<div class="carrow"><button class="thumbbtn" data-act="photo" data-id="${c.id}" data-car="${x.id}" title="Car photo">${x.photo ? `<img src="${x.photo}" alt="">` : '📷'}</button><input class="n" data-car="${c.id}:${x.id}:num" value="${esc(x.num)}" aria-label="Car number"><input class="nm" data-car="${c.id}:${x.id}:name" value="${esc(x.name)}" placeholder="Racer / car name"><button class="btn small danger" data-act="del-car" data-id="${c.id}" data-car="${x.id}">✕</button></div>`).join('')}
+        ${c.cars.map(x => `<div class="carrow"><button class="thumbbtn" data-act="photo" data-id="${c.id}" data-car="${x.id}" title="Car photo">${x.photo ? `<img src="${x.photo}" alt="">` : '📷'}</button><input class="n" data-car="${c.id}:${x.id}:num" value="${esc(x.num)}" aria-label="Car number"><input class="nm" data-car="${c.id}:${x.id}:name" value="${esc(x.name)}" placeholder="Racer / car name"><input class="wt${isOver(x, S.maxWeight) ? ' over' : ''}" data-car="${c.id}:${x.id}:weight" value="${esc(x.weight)}" placeholder="oz" inputmode="decimal" aria-label="Weight in ounces"><button class="btn small danger" data-act="del-car" data-id="${c.id}" data-car="${x.id}">✕</button></div>`).join('')}
         <div class="row" style="margin-top:.5rem"><button class="btn small" data-act="add-car" data-id="${c.id}">+ Add car</button>
           <button class="btn small" data-act="bulk" data-id="${c.id}">+ Paste list of names</button></div></div>`;
     }).join('') + `<button class="btn" data-act="add-class">+ Add class</button>`;
@@ -531,8 +544,9 @@ document.addEventListener('keydown', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'title') { S.title = t.value; save(); }
+  else if (t.id === 'maxw') { S.maxWeight = t.value; save(); document.querySelectorAll('input.wt').forEach(i => { const [cid, xid] = i.dataset.car.split(':'); i.classList.toggle('over', isOver(carOf(S.classes.find(c => c.id === cid), xid), S.maxWeight)); }); $('overbanner').innerHTML = overBanner(); }
   else if (t.dataset.rename) { S.classes.find(c => c.id === t.dataset.rename).name = t.value; save(); }
-  else if (t.dataset.car) { const [cid, xid, f] = t.dataset.car.split(':'); carOf(S.classes.find(c => c.id === cid), xid)[f] = t.value; save(); }
+  else if (t.dataset.car) { const [cid, xid, f] = t.dataset.car.split(':'); const car = carOf(S.classes.find(c => c.id === cid), xid); car[f] = t.value; save(); if (f === 'weight') { t.classList.toggle('over', isOver(car, S.maxWeight)); $('overbanner').innerHTML = overBanner(); } }
   else if (t.matches('.lane input')) t.style.outline = '';
 });
 document.addEventListener('change', e => {
