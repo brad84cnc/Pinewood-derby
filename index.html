@@ -6,90 +6,115 @@
 <title>Pinewood Derby</title>
 <style>
 :root{
-  --bg:#0f1420; --panel:#182033; --panel2:#1f2a42; --line:#2c3a5a; --text:#eef2fa; --dim:#8d9bb8;
-  --accent:#ffb400; --accent2:#3aa0ff; --good:#3ddc84; --bad:#ff5c5c;
-  --gold:#ffc83d; --silver:#c8d0de; --bronze:#d9894a;
-  --l1:#e5484d; --l2:#3aa0ff; --l3:#3ddc84;
+  --bg:#eaf4ff; --panel:#ffffff; --panel2:#eef5ff; --line:#c9daf5; --text:#14213d; --dim:#53648a;
+  --accent:#ffb400; --accent2:#0b5fff; --good:#0e9a4f; --bad:#d92d3a;
+  --gold:#ffc42e; --silver:#c3cddf; --bronze:#e09a5b; --goldtext:#9a5f00;
+  --l1:#e0262d; --l2:#0b72ff; --l3:#12a150;
+  --inputbg:#ffffff; --shadow:0 6px 18px rgba(11,95,255,.14);
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-body{min-height:100vh}
+html,body{margin:0;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;background:linear-gradient(160deg,#d9efff 0%,#fff7dc 55%,#ffe1ec 100%) fixed}
 button{font:inherit;color:inherit;cursor:pointer}
-input,textarea,select{font:inherit;color:var(--text);background:#0c111c;border:1px solid var(--line);border-radius:8px;padding:.55em .7em}
-input:focus,textarea:focus,select:focus{outline:2px solid var(--accent2);outline-offset:1px}
-.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:.5em 1em}
+input,textarea,select{font:inherit;color:var(--text);background:var(--inputbg);border:2px solid var(--line);border-radius:8px;padding:.55em .7em}
+input:focus,textarea:focus,select:focus{outline:3px solid #ffb40088;outline-offset:1px;border-color:var(--accent2)}
+.btn{background:#fff;border:2px solid var(--line);border-radius:8px;padding:.5em 1em;font-weight:600}
 .btn:hover{border-color:var(--accent2)}
-.btn.primary{background:var(--accent);color:#1b1300;border-color:var(--accent);font-weight:700}
-.btn.danger{border-color:#7a2f35;color:#ff9a9a}
+.btn.primary{background:linear-gradient(180deg,#ffcb3d,#ffa800);color:#2a1a00;border-color:#e69500;font-weight:800;box-shadow:0 3px 0 #c98200}
+.btn.danger{border-color:#f3b0b5;color:#c4232d;background:#fff}
 .btn.small{padding:.25em .6em;font-size:.85em}
-header{display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;padding:.7rem 1.2rem;background:#0b101a;border-bottom:1px solid var(--line)}
-header h1{font-size:1.25rem;margin:0;letter-spacing:.04em}
-header h1 span{color:var(--accent)}
+header{position:relative;display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;padding:.8rem 1.2rem;background:linear-gradient(90deg,#0b5fff,#1d8bff 55%,#00b3ff);color:#fff;margin-bottom:18px}
+header::after,body.tv .tvtitle::after{content:"";position:absolute;left:0;right:0;bottom:-16px;height:16px;background:repeating-conic-gradient(#14213d 0 25%,#fff 0 50%) 0 0/16px 16px}
+header h1{font-size:1.5rem;margin:0;letter-spacing:.06em;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+header h1 span{color:#ffd24a}
 nav{display:flex;gap:.4rem;flex-wrap:wrap}
-nav button{background:transparent;border:1px solid transparent;border-radius:8px;padding:.4em .9em}
-nav button.on{background:var(--panel2);border-color:var(--line);color:var(--accent)}
+nav button{background:transparent;border:2px solid transparent;border-radius:999px;padding:.35em 1em;color:#fff;font-weight:700}
+nav button.on{background:#fff;color:var(--accent2)}
 .spacer{flex:1}
-.tabs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.7rem 1.2rem 0}
-.tabs button{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.35em 1em}
-.tabs button.on{background:var(--accent);color:#1b1300;border-color:var(--accent);font-weight:700}
+.tabs{display:flex;gap:.4rem;flex-wrap:wrap;padding:.9rem 1.2rem 0}
+.tabs button{background:#fff;border:2px solid var(--line);border-radius:999px;padding:.35em 1em;font-weight:600}
+.tabs button.on{background:linear-gradient(180deg,#ffcb3d,#ffa800);color:#2a1a00;border-color:#e69500;font-weight:800}
 main{padding:1rem 1.2rem 3rem;max-width:1700px;margin:0 auto}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1rem}
-.card h2{margin:.1em 0 .6em;font-size:1rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.card{background:var(--panel);border:2px solid var(--line);border-left:8px solid var(--accent2);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.card h2{margin:.1em 0 .6em;font-size:1rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2);font-weight:800}
 .grid2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:1rem;align-items:start}
 @media (max-width:1000px){.grid2{grid-template-columns:1fr}}
 .lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem}
-.lane{background:var(--panel2);border-radius:12px;border-top:6px solid var(--lc);padding:.7rem .8rem;text-align:center;min-width:0}
-.lane .ln{font-size:.8rem;letter-spacing:.15em;color:var(--lc);font-weight:700}
-.lane .num{font-size:clamp(2.6rem,6vw,5.5rem);font-weight:800;line-height:1.05}
-.lane .nm{color:var(--dim);min-height:1.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane{position:relative;background:linear-gradient(180deg,#fff,var(--panel2));border:2px solid var(--line);border-radius:12px;border-top:8px solid var(--lc);padding:.7rem .8rem;text-align:center;min-width:0}
+.lane .ln{font-size:.8rem;letter-spacing:.15em;color:var(--lc);font-weight:800}
+.lane .num{font-size:clamp(2.6rem,6vw,5.5rem);font-weight:900;line-height:1.05}
+.lane .nm{color:var(--dim);min-height:1.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .lane input{width:100%;margin-top:.5rem;text-align:center;font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums}
-.lane .tm{font-size:clamp(1.6rem,3vw,2.8rem);font-weight:700;font-variant-numeric:tabular-nums;margin-top:.4rem;min-height:1.3em}
-.lane .pl{font-size:.9rem;font-weight:700}
-.lane.empty{opacity:.35}
-.lane.win{box-shadow:0 0 0 2px var(--gold) inset}
+.lane .tm{font-size:clamp(1.6rem,3vw,2.8rem);font-weight:800;font-variant-numeric:tabular-nums;margin-top:.4rem;min-height:1.3em}
+.lane .pl{font-size:.9rem;font-weight:800;color:var(--goldtext)}
+.lane.empty{opacity:.45}
+.lane.win{border-color:var(--gold);animation:glow 1.6s ease-in-out infinite}
+.lane.win::before{content:"👑";position:absolute;top:.35rem;left:.4rem;font-size:1.6rem;transform:rotate(-14deg)}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 #ffc42e00,0 4px 14px #ffc42e66}50%{box-shadow:0 0 0 6px #ffc42e55,0 4px 22px #ffc42eaa}}
+@keyframes pop{from{opacity:0;transform:translateY(28px) scale(.85)}to{opacity:1;transform:none}}
+.lane.enter{animation:pop .55s cubic-bezier(.2,1.4,.4,1) both}
+.lane.enter:nth-child(2){animation-delay:.12s}.lane.enter:nth-child(3){animation-delay:.24s}
+.lane.enter.win{animation:pop .55s cubic-bezier(.2,1.4,.4,1) both,glow 1.6s ease-in-out .8s infinite}
 .row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
 .heatbar{display:flex;gap:.8rem;align-items:baseline;margin-bottom:.7rem}
-.heatbar .big{font-size:1.6rem;font-weight:800}
+.heatbar .big{font-size:1.6rem;font-weight:900}
 .chips{display:flex;flex-wrap:wrap;gap:.35rem}
-.chip{min-width:2.4em;text-align:center;padding:.3em .6em;border-radius:8px;background:var(--panel2);border:1px solid var(--line)}
-.chip.done{border-color:var(--good);color:var(--good)}
-.chip.cur{background:var(--accent);color:#1b1300;border-color:var(--accent);font-weight:700}
+.chip{min-width:2.4em;text-align:center;padding:.3em .6em;border-radius:8px;background:#fff;border:2px solid var(--line);font-weight:700}
+.chip.done{border-color:var(--good);color:#fff;background:var(--good)}
+.chip.cur{background:linear-gradient(180deg,#ffcb3d,#ffa800);color:#2a1a00;border-color:#e69500}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 th,td{padding:.45em .6em;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:600}
-th.sorted{color:var(--accent)}
-td.sorted{color:var(--accent);font-weight:700}
+tr:nth-child(even) td{background:#f4f8ff}
+th{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:800}
+th.sorted{color:var(--accent2)}
+td.sorted{color:var(--accent2);font-weight:800}
 th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}
 td.name{max-width:14em;overflow:hidden;text-overflow:ellipsis}
 tr.prov td{color:var(--dim)}
 tr.prov td.sorted{color:var(--dim)}
-.medal{display:inline-grid;place-items:center;width:2.1em;height:2.1em;border-radius:50%;font-weight:800;color:#1b1300;background:#3a4663}
-.medal.p1{background:var(--gold)}.medal.p2{background:var(--silver)}.medal.p3{background:var(--bronze)}
-.medal.prov{background:transparent;color:var(--dim);border:1px dashed var(--line)}
-tr.p1 td.name,tr.p1 td.num{color:var(--gold);font-weight:700}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.seg button{background:var(--panel);border:0;padding:.45em 1em;border-right:1px solid var(--line)}
+.medal{display:inline-grid;place-items:center;width:2.1em;height:2.1em;border-radius:50%;font-weight:900;color:#14213d;background:#dbe5f7}
+.medal.p1{background:radial-gradient(circle at 35% 30%,#ffe27a,var(--gold));box-shadow:0 0 0 3px #ffc42e55,0 2px 8px #ffc42e99}
+.medal.p2{background:radial-gradient(circle at 35% 30%,#fff,var(--silver))}
+.medal.p3{background:radial-gradient(circle at 35% 30%,#ffd0a3,var(--bronze))}
+.medal.prov{background:transparent;color:var(--dim);border:2px dashed var(--line)}
+tr.p1 td{background:linear-gradient(90deg,#fff1b8,#fffbe8)}
+tr.p1 td.name,tr.p1 td.num{color:var(--goldtext);font-weight:900}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{background:#fff;border:0;padding:.45em 1em;border-right:2px solid var(--line);font-weight:600}
 .seg button:last-child{border-right:0}
-.seg button.on{background:var(--accent2);color:#04121f;font-weight:700}
+.seg button.on{background:var(--accent2);color:#fff;font-weight:800}
 .muted{color:var(--dim)}
 .note{color:var(--dim);font-size:.9rem}
-.warn{background:#3a2a10;border:1px solid #7a5a1c;color:#ffd28a;border-radius:10px;padding:.6em .9em;margin-bottom:.8rem}
-.setup-class{border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:1rem;background:var(--panel)}
+.warn{background:#fff4d6;border:2px solid #f0c35a;color:#7a4b00;border-radius:10px;padding:.6em .9em;margin-bottom:.8rem}
+.setup-class{border:2px solid var(--line);border-left:8px solid var(--accent);border-radius:12px;padding:.9rem;margin-bottom:1rem;background:#fff;box-shadow:var(--shadow)}
 .carrow{display:flex;gap:.5rem;margin:.3rem 0}
 .carrow input.n{width:5em}
 .carrow input.nm{flex:1;min-width:0}
-.pic{display:block;width:100%;height:clamp(5rem,13vh,10rem);object-fit:cover;border-radius:8px;margin:.4rem 0 .2rem;background:#0c111c}
-.thumb{width:2.4em;height:1.8em;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:.5em;background:#0c111c}
-.thumbbtn{width:4.2rem;height:3.2rem;padding:0;border:1px dashed var(--line);border-radius:8px;background:#0c111c;overflow:hidden;font-size:1.4rem}
+.pic{display:block;width:100%;height:clamp(5rem,13vh,10rem);object-fit:cover;border-radius:8px;margin:.4rem 0 .2rem;background:#dbe5f7}
+.thumb{width:2.4em;height:1.8em;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:.5em;background:#dbe5f7}
+.thumbbtn{width:4.2rem;height:3.2rem;padding:0;border:2px dashed var(--line);border-radius:8px;background:#f4f8ff;overflow:hidden;font-size:1.4rem}
 .thumbbtn img{width:100%;height:100%;object-fit:cover;display:block}
-.modal{position:fixed;inset:0;background:#000c;display:grid;place-items:center;z-index:20;padding:1rem}
-.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1rem;width:min(640px,100%)}
+.modal{position:fixed;inset:0;background:#0a1530cc;display:grid;place-items:center;z-index:20;padding:1rem}
+.modal .box{background:#fff;border:2px solid var(--line);border-radius:14px;padding:1rem;width:min(640px,100%)}
 .modal h3{margin:.1em 0 .6em}
 .modal video{width:100%;max-height:55vh;background:#000;border-radius:8px;margin-bottom:.6rem}
-.over{color:var(--bad)!important;font-weight:700}
+.over{color:var(--bad)!important;font-weight:800}
 input.over{border-color:var(--bad);outline:1px solid var(--bad)}
 .carrow input.wt{width:5.5em;text-align:right}
 .big-empty{text-align:center;padding:3rem 1rem;color:var(--dim)}
+/* champions */
+.champs{background:linear-gradient(135deg,#fff3c4,#ffe08a);border:3px solid var(--gold);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1rem;box-shadow:0 8px 24px #ffb40055;text-align:center}
+.champs h2{margin:0 0 .6rem;font-size:1.5rem;color:#7a4b00;letter-spacing:.04em}
+.podium{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;align-items:flex-end}
+.pod{background:#fff;border:3px solid var(--line);border-radius:12px;padding:.6rem 1rem;min-width:9rem}
+.pod.p1{border-color:var(--gold);transform:scale(1.12);margin:0 .6rem}
+.pod.p2{border-color:var(--silver)}.pod.p3{border-color:var(--bronze)}
+.pod .pm{font-size:2rem;line-height:1}
+.pod img{display:block;width:8rem;height:5.5rem;object-fit:cover;border-radius:8px;margin:.3rem auto}
+.pod .pn{font-weight:800}
+.pod .pt{color:var(--dim);font-variant-numeric:tabular-nums}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:reduce){.lane.enter,.lane.win,.lane.enter.win{animation:none}}
 /* TV mode */
 body.tv header,body.tv .tabs{display:none}
 body.tv main{max-width:none;padding:1.2vw 1.6vw}
@@ -103,19 +128,24 @@ body.tv th{font-size:.8vw}
 body.tv .medal{font-size:1.1vw}
 body.tv .heatbar .big{font-size:2.6vw}
 body.tv .lane .nm{font-size:1.4vw}
-body.tv .pic{height:11vw}
+body.tv .pic{height:7vw}
 body.tv .lane .wt{font-size:1.2vw!important}
 body.tv .lane .ln{font-size:1vw}
 body.tv .chip{font-size:1vw}
-.tvbar{position:fixed;top:.6rem;right:.8rem;display:none;gap:.4rem;opacity:.15;transition:opacity .2s;z-index:5}
+body.tv .lane.win::before{font-size:2.6vw}
+body.tv .champs h2{font-size:2vw;margin-bottom:.4vw}body.tv .champs{padding:.8vw 1vw;margin-bottom:1vw}
+body.tv .pod{min-width:12vw}body.tv .pod .pm{font-size:3vw}body.tv .pod .pn{font-size:1.6vw}body.tv .pod .pt{font-size:1.3vw}
+body.tv .pod img{width:7vw;height:4.8vw}
+.tvbar{position:fixed;top:.6rem;right:.8rem;display:none;gap:.4rem;opacity:.25;transition:opacity .2s;z-index:5}
 .tvbar:hover{opacity:1}
 body.tv .tvbar{display:flex}
 body.tv.idle{cursor:none}
 .tvtitle{display:none}
-body.tv .tvtitle{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 .8vw}
-body.tv .tvtitle h1{font-size:3vw;margin:0}
-body.tv .tvtitle h1 span{color:var(--accent)}
-body.tv .tvtitle .cls{font-size:2.4vw;font-weight:700;color:var(--accent)}
+body.tv .tvtitle{position:relative;display:flex;justify-content:space-between;align-items:baseline;margin:0 0 2.2vw;padding:.6vw 1.6vw;border-radius:14px 14px 0 0;background:linear-gradient(90deg,#0b5fff,#1d8bff 55%,#00b3ff);color:#fff}
+body.tv .tvtitle::after{bottom:-1vw;height:1vw;background-size:1vw 1vw}
+body.tv .tvtitle h1{font-size:3vw;margin:0;text-shadow:0 .15vw 0 rgba(0,0,0,.2)}
+body.tv .tvtitle h1 span{color:#ffd24a}
+body.tv .tvtitle .cls{font-size:2.4vw;font-weight:800;color:#fff}
 </style>
 </head>
 <body>
@@ -282,7 +312,34 @@ function render() {
   else if (view === 'tv') app.innerHTML = renderTV();
   else if (view === 'standings') app.innerHTML = renderStandings();
   else app.innerHTML = renderSetup();
+  const key = view === 'race' || view === 'tv' ? S.active + ':' + curHeat(cls()) : null;
+  if (key && key !== lastHeatKey) document.querySelectorAll('.lane').forEach(l => l.classList.add('enter'));
+  lastHeatKey = key;
+  checkCelebrate();
   if (view === 'race') focusFirstInput();
+}
+
+let lastHeatKey = null;
+const wasComplete = {};
+function checkCelebrate() {
+  const c = cls(), done = c.heats.length > 0 && nextIncomplete(c) < 0;
+  if (wasComplete[c.id] === false && done) confetti();
+  wasComplete[c.id] = done;
+}
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let cv = $('confetti');
+  if (!cv) { cv = document.createElement('canvas'); cv.id = 'confetti'; document.body.appendChild(cv); }
+  cv.width = innerWidth; cv.height = innerHeight;
+  const g = cv.getContext('2d'), cols = ['#ffb400', '#0b5fff', '#e0262d', '#12a150', '#ff5fa2', '#7c4dff'];
+  const ps = Array.from({ length: 240 }, () => ({ x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .6, w: 6 + Math.random() * 8, h: 10 + Math.random() * 10,
+    vx: (Math.random() - .5) * 4, vy: 2 + Math.random() * 5, r: Math.random() * 6.28, vr: (Math.random() - .5) * .3, c: cols[Math.random() * cols.length | 0] }));
+  const t0 = performance.now();
+  (function frame(t) {
+    g.clearRect(0, 0, cv.width, cv.height);
+    ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += p.vr; g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); g.restore(); });
+    if (t - t0 < 5000) requestAnimationFrame(frame); else cv.remove();
+  })(t0);
 }
 
 function laneCards(c, hi, edit) {
@@ -320,7 +377,7 @@ function renderRace(tv) {
   const hi = curHeat(c), h = c.heats[hi];
   const allDone = nextIncomplete(c) < 0;
   const stale = heatsStale(c) ? `<div class="warn">The car list changed since heats were built. Rebuild in Setup to include the changes.</div>` : '';
-  return `${stale}<div class="grid2"><div>
+  return `${stale}${champions(c)}<div class="grid2"><div>
     <div class="card">
       <div class="heatbar"><span class="big">Heat ${hi + 1} <span class="muted">of ${c.heats.length}</span></span>
         <span class="muted">${esc(c.name)}</span><span class="spacer"></span>
@@ -344,13 +401,25 @@ function renderTV() {
   const head = `<div class="tvtitle"><h1>🏁 <span>${esc(S.title || 'Pinewood Derby')}</span></h1><div class="cls">${esc(c.name)}</div></div>`;
   if (!c.cars.length || !c.heats.length) return head + `<div class="card big-empty" style="font-size:2vw">Waiting for the next race…</div>`;
   const hi = curHeat(c);
-  return head + `<div class="grid2"><div>
+  return head + champions(c) + `<div class="grid2"><div>
     <div class="card"><div class="heatbar"><span class="big">Heat ${hi + 1} <span class="muted">of ${c.heats.length}</span></span><span class="spacer"></span>
       ${nextIncomplete(c) < 0 ? '<span style="color:var(--good);font-weight:700;font-size:1.6vw">🏁 Class complete</span>' : ''}</div>
       ${laneCards(c, hi, false)}</div>
     <div class="card"><h2>On deck</h2><div style="font-size:1.6vw">${onDeck(c, hi)}</div></div>
     <div class="card"><h2>Heats</h2>${chips(c, hi, false)}</div>
   </div><div>${standingsCard(c, true)}</div></div>`;
+}
+
+function metricOf(r) {
+  const m = S.method;
+  return m === 'total' ? fmt(r.total) + ' s total' : m === 'points' ? r.points + ' pts' : m === 'best' ? fmt(r.best) + ' s best' : fmt(r.avg, 4) + ' s avg';
+}
+function champions(c) {
+  if (!c.heats.length || nextIncomplete(c) >= 0) return '';
+  const top = computeStandings(c, S.method).filter(r => r.place && r.place <= 3 && !r.provisional);
+  const icon = ['', '🥇', '🥈', '🥉'];
+  return `<div class="champs"><h2>🏆 ${esc(c.name)} Champions 🏆</h2><div class="podium">` + top.map(r =>
+    `<div class="pod p${r.place}"><div class="pm">${icon[r.place]}</div>${r.car.photo ? `<img src="${r.car.photo}" alt="">` : ''}<div class="pn">#${esc(r.car.num)} ${esc(r.car.name)}</div><div class="pt">${metricOf(r)}</div></div>`).join('') + `</div></div>`;
 }
 
 function standingsTable(c) {
