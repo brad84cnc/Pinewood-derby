@@ -20,3 +20,6 @@ A single-file, offline race manager and TV display. No install, no internet need
 
 ## Data
 Everything is saved in the browser (`localStorage`). Use **Setup → Export backup** after the event (or periodically) and **Import backup** to restore on another machine.
+
+## Automating the track (optional)
+An Arduino-based timer that releases the gate, times each lane with finish-line sensors and shows time and place on a finish-line display is described in [`hardware/GUIDE.md`](hardware/GUIDE.md). The sketch is in `hardware/derby_timer/`. It is simulated but not yet tested on real hardware, and the app does not read the timer yet: type the times in as usual.
