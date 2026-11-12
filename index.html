@@ -101,6 +101,7 @@ tr.p1 td.name,tr.p1 td.num{color:var(--goldtext);font-weight:900}
 .over{color:var(--bad)!important;font-weight:800}
 input.over{border-color:var(--bad);outline:1px solid var(--bad)}
 .carrow input.wt{width:5.5em;text-align:right}
+.dnfbtn{display:block;width:100%;margin-top:.4rem;color:var(--bad);border-color:#f3b0b5}
 .big-empty{text-align:center;padding:3rem 1rem;color:var(--dim)}
 /* champions */
 .champs{background:linear-gradient(135deg,#fff3c4,#ffe08a);border:3px solid var(--gold);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1rem;box-shadow:0 8px 24px #ffb40055;text-align:center}
@@ -188,8 +189,10 @@ function shuffled(a) {
   return r;
 }
 
+// A lane time is a number (seconds) or the string 'DNF' (crashed / didn't cross the line).
+const isTimed = t => typeof t === 'number' || t === 'DNF';
 function heatDone(h) {
-  return h.lanes.every((c, k) => !c || typeof h.times[k] === 'number');
+  return h.lanes.every((c, k) => !c || isTimed(h.times[k]));
 }
 
 // Place (1..3) of each lane in a heat; null until the whole heat has times.
@@ -198,7 +201,8 @@ function heatPlaces(h) {
   const occ = [];
   h.lanes.forEach((c, k) => { if (c) occ.push(k); });
   if (!occ.length || !heatDone(h)) return r;
-  occ.forEach(k => { r[k] = 1 + occ.filter(o => q(h.times[o]) < q(h.times[k])).length; });
+  const key = k => h.times[k] === 'DNF' ? Infinity : q(h.times[k]);   // DNF always ranks last
+  occ.forEach(k => { r[k] = 1 + occ.filter(o => key(o) < key(k)).length; });
   return r;
 }
 
@@ -211,9 +215,10 @@ const METHODS = {
 
 const cmpKey = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i]; return 0; };
 
-function computeStandings(cls, method) {
+// dnfTime: seconds a DNF counts as in averages/totals (heat points: last place in the heat).
+function computeStandings(cls, method, dnfTime = 9.999) {
   const M = METHODS[method] || METHODS.avg;
-  const rows = cls.cars.map(car => ({ car, runs: [], expected: 0, done: 0, total: 0, avg: 0, best: Infinity, points: 0 }));
+  const rows = cls.cars.map(car => ({ car, runs: [], expected: 0, done: 0, total: 0, avg: 0, best: Infinity, points: 0, dnfs: 0 }));
   const byId = Object.fromEntries(rows.map(r => [r.car.id, r]));
   cls.heats.forEach((h, hi) => {
     const pl = heatPlaces(h);
@@ -221,11 +226,13 @@ function computeStandings(cls, method) {
       const r = cid && byId[cid]; if (!r) return;
       r.expected++;
       const t = h.times[k];
-      if (typeof t === 'number') {
-        r.done++; r.total += t; r.best = Math.min(r.best, t);
+      if (isTimed(t)) {
+        const eff = t === 'DNF' ? dnfTime : t;
+        r.done++; r.total += eff; r.best = Math.min(r.best, eff);
+        if (t === 'DNF') r.dnfs++;
         if (pl[k]) r.points += pl[k];
       }
-      r.runs.push({ heat: hi, lane: k, time: typeof t === 'number' ? t : null, place: pl[k] });
+      r.runs.push({ heat: hi, lane: k, time: typeof t === 'number' ? t : null, dnf: t === 'DNF', place: pl[k] });
     });
   });
   rows.forEach(r => { r.avg = r.done ? r.total / r.done : 0; r.complete = r.expected > 0 && r.done === r.expected; });
@@ -251,6 +258,7 @@ const fmt = (t, d = 3) => (typeof t === 'number' && isFinite(t)) ? t.toFixed(d) 
 const parseWeight = s => { const n = parseFloat(String(s ?? '').trim().replace(',', '.')); return isFinite(n) && n > 0 ? n : null; };
 const isOver = (car, max) => { const w = parseWeight(car.weight), m = parseWeight(max); return w != null && m != null && q(w) > q(m); };
 const fmtWt = w => { const n = parseWeight(w); return n == null ? '' : (Math.round(n * 100) / 100) + ' oz'; };
+const parseEntry = s => /^\s*(dnf|d|x)\s*$/i.test(String(s)) ? 'DNF' : parseTime(s);
 const parseTime = s => { const n = parseFloat(String(s).trim().replace(',', '.')); return isFinite(n) && n > 0 ? n : null; };
 // True when the car list no longer matches the cars the heats were built from.
 function heatsStale(cls) {
@@ -266,9 +274,10 @@ const KEY = 'pinewood.v1';
 const DEFAULT_CLASSES = ['Lion', 'Tiger', 'Wolf', 'Bear', 'Webelos', 'Arrow of Light', 'X Class (Adults)'];
 let S, view = location.hash === '#tv' ? 'tv' : 'race', stSel = null;
 
+const dnfSecs = () => parseTime(S.dnfTime) || 9.999;
 function fresh() {
   const classes = DEFAULT_CLASSES.map(name => ({ id: uid(), name, cars: [], heats: [] }));
-  return { v: 1, title: 'Pinewood Derby', classes, active: classes[0].id, cur: {}, method: 'avg', maxWeight: '5' };
+  return { v: 1, title: 'Pinewood Derby', classes, active: classes[0].id, cur: {}, method: 'avg', maxWeight: '5', dnfTime: '9.999' };
 }
 function load() {
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.classes) return s; } catch (e) {}
@@ -349,10 +358,10 @@ function laneCards(c, hi, edit) {
     const car = cid && carOf(c, cid);
     if (!car) return `<div class="lane empty" style="--lc:${colors[k]}"><div class="ln">LANE ${k + 1}</div><div class="num">–</div><div class="nm">empty</div></div>`;
     const t = h.times[k];
-    const win = pl[k] === 1 ? ' win' : '';
+    const win = pl[k] === 1 && typeof t === 'number' ? ' win' : '';
     const body = edit
-      ? `<input data-lane="${k}" inputmode="decimal" autocomplete="off" placeholder="0.000" value="${typeof t === 'number' ? t.toFixed(3) : ''}">`
-      : `<div class="tm">${typeof t === 'number' ? fmt(t) : '&nbsp;'}</div>${pl[k] ? `<div class="pl">${['', '1st', '2nd', '3rd'][pl[k]] || pl[k] + 'th'}</div>` : ''}`;
+      ? `<input data-lane="${k}" inputmode="decimal" autocomplete="off" placeholder="0.000 or DNF" value="${typeof t === 'number' ? t.toFixed(3) : t === 'DNF' ? 'DNF' : ''}"><button class="btn small dnfbtn" data-act="dnf" data-lane="${k}" tabindex="-1">DNF (crash / no finish)</button>`
+      : `<div class="tm">${t === 'DNF' ? '<span class="over">DNF</span>' : typeof t === 'number' ? fmt(t) : '&nbsp;'}</div>${pl[k] && t !== 'DNF' ? `<div class="pl">${['', '1st', '2nd', '3rd'][pl[k]] || pl[k] + 'th'}</div>` : ''}`;
     return `<div class="lane${win}" style="--lc:${colors[k]}"><div class="ln">LANE ${k + 1}</div>${car.photo ? `<img class="pic" src="${car.photo}" alt="">` : ''}<div class="num">${esc(car.num)}</div><div class="nm">${esc(car.name) || '&nbsp;'}</div><div class="wt${isOver(car, S.maxWeight) ? ' over' : ''}" style="min-height:1.3em;font-size:.9em">${fmtWt(car.weight)}${isOver(car, S.maxWeight) ? ' OVERWEIGHT' : ''}</div>${body}</div>`;
   }).join('') + `</div>`;
 }
@@ -367,7 +376,7 @@ function onDeck(c, hi) {
 
 function chips(c, hi, clickable) {
   return `<div class="chips">` + c.heats.map((h, i) =>
-    `<${clickable ? 'button' : 'span'} class="chip ${heatDone(h) ? 'done' : ''} ${i === hi ? 'cur' : ''}" ${clickable ? `data-heat="${i}"` : ''}>${i + 1}</${clickable ? 'button' : 'span'}>`).join('') + `</div>`;
+    `<${clickable ? 'button' : 'span'} class="chip ${heatDone(h) ? 'done' : ''} ${i === hi ? 'cur' : ''}" ${clickable ? `data-heat="${i}"` : ''}>${i + 1}${h.reruns ? '↻' : ''}</${clickable ? 'button' : 'span'}>`).join('') + `</div>`;
 }
 
 function renderRace(tv) {
@@ -380,16 +389,17 @@ function renderRace(tv) {
   return `${stale}${champions(c)}<div class="grid2"><div>
     <div class="card">
       <div class="heatbar"><span class="big">Heat ${hi + 1} <span class="muted">of ${c.heats.length}</span></span>
-        <span class="muted">${esc(c.name)}</span><span class="spacer"></span>
+        <span class="muted">${esc(c.name)}</span>${h.reruns ? `<span class="muted">↻ re-run ×${h.reruns}</span>` : ''}<span class="spacer"></span>
         ${allDone ? '<span style="color:var(--good);font-weight:700">🏁 All heats complete</span>' : ''}</div>
       ${laneCards(c, hi, true)}
       <div class="row" style="margin-top:.9rem">
         <button class="btn primary" data-act="save-heat">Save heat ⏎</button>
+        <button class="btn" data-act="rerun">↻ Re-run heat</button>
         <button class="btn" data-act="clear-heat">Clear heat</button>
         <span class="spacer"></span>
         <button class="btn" data-act="prev">← Prev</button><button class="btn" data-act="next">Next →</button>
       </div>
-      <p class="note">Type each lane's time (seconds) and press Enter to move to the next lane; Enter on the last lane saves and loads the next heat.</p>
+      <p class="note">Type each lane's time (seconds) and press Enter to move to the next lane; Enter on the last lane saves and loads the next heat. If a car crashes or doesn't cross the line, type <b>DNF</b> (or <b>D</b>) or click its DNF button. If the heat needs to be run again, use <b>Re-run heat</b>.</p>
     </div>
     <div class="card"><h2>On deck</h2>${onDeck(c, hi)}</div>
     <div class="card"><h2>Heats</h2>${chips(c, hi, true)}</div>
@@ -402,7 +412,7 @@ function renderTV() {
   if (!c.cars.length || !c.heats.length) return head + `<div class="card big-empty" style="font-size:2vw">Waiting for the next race…</div>`;
   const hi = curHeat(c);
   return head + champions(c) + `<div class="grid2"><div>
-    <div class="card"><div class="heatbar"><span class="big">Heat ${hi + 1} <span class="muted">of ${c.heats.length}</span></span><span class="spacer"></span>
+    <div class="card"><div class="heatbar"><span class="big">Heat ${hi + 1} <span class="muted">of ${c.heats.length}</span></span>${c.heats[hi].reruns ? `<span class="muted" style="font-size:1.6vw">↻ re-run ×${c.heats[hi].reruns}</span>` : ''}<span class="spacer"></span>
       ${nextIncomplete(c) < 0 ? '<span style="color:var(--good);font-weight:700;font-size:1.6vw">🏁 Class complete</span>' : ''}</div>
       ${laneCards(c, hi, false)}</div>
     <div class="card"><h2>On deck</h2><div style="font-size:1.6vw">${onDeck(c, hi)}</div></div>
@@ -416,7 +426,7 @@ function metricOf(r) {
 }
 function champions(c) {
   if (!c.heats.length || nextIncomplete(c) >= 0) return '';
-  const top = computeStandings(c, S.method).filter(r => r.place && r.place <= 3 && !r.provisional);
+  const top = computeStandings(c, S.method, dnfSecs()).filter(r => r.place && r.place <= 3 && !r.provisional);
   const icon = ['', '🥇', '🥈', '🥉'];
   return `<div class="champs"><h2>🏆 ${esc(c.name)} Champions 🏆</h2><div class="podium">` + top.map(r =>
     `<div class="pod p${r.place}"><div class="pm">${icon[r.place]}</div>${r.car.photo ? `<img src="${r.car.photo}" alt="">` : ''}<div class="pn">#${esc(r.car.num)} ${esc(r.car.name)}</div><div class="pt">${metricOf(r)}</div></div>`).join('') + `</div></div>`;
@@ -424,12 +434,12 @@ function champions(c) {
 
 function standingsTable(c) {
   const M = METHODS[S.method] || METHODS.avg;
-  const rows = computeStandings(c, S.method);
+  const rows = computeStandings(c, S.method, dnfSecs());
   const cols = ['avg', 'total', 'best', 'points'];
   const head = `<tr><th>Place</th><th>Car</th><th>Name</th><th>Wt</th><th>L1</th><th>L2</th><th>L3</th>` +
     cols.map(k => `<th class="${M.col === k ? 'sorted' : ''}">${{ avg: 'Avg', total: 'Total', best: 'Best', points: 'Pts' }[k]}</th>`).join('') + `</tr>`;
   const body = rows.map(r => {
-    const lane = [0, 1, 2].map(k => { const run = r.runs.find(x => x.lane === k); return `<td>${run ? fmt(run.time) : ''}</td>`; }).join('');
+    const lane = [0, 1, 2].map(k => { const run = r.runs.find(x => x.lane === k); return `<td>${run ? (run.dnf ? '<span class="over">DNF</span>' : fmt(run.time)) : ''}</td>`; }).join('');
     const med = r.place ? `<span class="medal ${r.provisional ? 'prov' : 'p' + r.place}">${r.place}</span>` : '';
     const v = { avg: fmt(r.done ? r.avg : null, 4), total: fmt(r.done ? r.total : null), best: fmt(r.done ? r.best : null), points: r.done ? r.points : '–' };
     return `<tr class="${r.provisional ? 'prov' : ''} ${!r.provisional && r.place === 1 ? 'p1' : ''}"><td>${med}</td><td class="num">#${esc(r.car.num)}</td><td class="name">${r.car.photo ? `<img class="thumb" src="${r.car.photo}" alt="">` : ''}${esc(r.car.name)}${r.provisional && r.done ? ` <span class="muted">(${r.done}/${r.expected})</span>` : ''}</td><td class="${isOver(r.car, S.maxWeight) ? 'over' : ''}">${fmtWt(r.car.weight).replace(' oz', '')}</td>${lane}` +
@@ -455,7 +465,7 @@ function renderStandings() {
 
 function renderOverall() {
   const winners = S.classes.map(c => {
-    const rows = computeStandings(c, S.method).filter(r => r.place);
+    const rows = computeStandings(c, S.method, dnfSecs()).filter(r => r.place);
     const top = rows.filter(r => r.place === 1);
     const done = c.heats.length && nextIncomplete(c) < 0;
     return `<tr><td style="text-align:left">${esc(c.name)}</td><td style="text-align:left">${top.length ? top.map(r => `#${esc(r.car.num)} ${esc(r.car.name)}`).join(', ') : '–'}</td><td>${done ? 'Final' : (c.heats.length ? 'Racing' : '—')}</td></tr>`;
@@ -475,6 +485,7 @@ function overBanner() {
 function renderSetup() {
   const c = cls();
   return `<div class="card"><h2>Event</h2><div class="row"><label>Title <input id="title" value="${esc(S.title)}" size="30"></label>
+    <label>DNF counts as (s) <input id="dnft" value="${esc(S.dnfTime ?? '9.999')}" size="5" inputmode="decimal" title="Time used in averages/totals when a car crashes or doesn't finish"></label>
     <label>Max weight (oz) <input id="maxw" value="${esc(S.maxWeight ?? '5')}" size="4" inputmode="decimal" title="Leave blank for no limit"></label>
     <span class="spacer"></span>
     <button class="btn" data-act="export">⬇ Export backup</button>
@@ -483,7 +494,7 @@ function renderSetup() {
     <input type="file" id="file" accept="application/json" hidden></div></div>` +
     `<div id="overbanner">${overBanner()}</div>` +
     S.classes.map(c => {
-      const hasTimes = c.heats.some(h => h.times.some(t => typeof t === 'number'));
+      const hasTimes = c.heats.some(h => h.times.some(t => t != null));
       return `<div class="setup-class" data-cid="${c.id}">
         <div class="row" style="margin-bottom:.6rem"><input data-rename="${c.id}" value="${esc(c.name)}" style="font-weight:700;font-size:1.1rem">
           <span class="muted">${c.cars.length} car${c.cars.length === 1 ? '' : 's'}${c.heats.length ? ` · ${c.heats.length} heats${hasTimes ? ' · racing started' : ''}` : ''}</span>
@@ -544,7 +555,7 @@ function nextNum() {
   return String(Math.max(0, ...all) + 1);
 }
 function build(c, shuffle) {
-  const hasTimes = c.heats.some(h => h.times.some(t => typeof t === 'number'));
+  const hasTimes = c.heats.some(h => h.times.some(t => t != null));
   if (hasTimes && !confirm(`${c.name} already has recorded times. Rebuilding will ERASE them. Continue?`)) return;
   const ids = c.cars.map(x => x.id);
   c.heats = generateHeats(shuffle ? shuffled(ids) : ids);
@@ -555,7 +566,7 @@ function saveHeat() {
   const h = c.heats[hi], times = [null, null, null];
   const inputs = [...document.querySelectorAll('.lane input')];
   for (const inp of inputs) {
-    const t = parseTime(inp.value);
+    const t = parseEntry(inp.value);
     if (t == null) { inp.focus(); inp.select(); inp.style.outline = '2px solid var(--bad)'; return; }
     times[+inp.dataset.lane] = t;
   }
@@ -571,6 +582,12 @@ const act = {
   build(d) { build(S.classes.find(c => c.id === d.id), false); },
   shuffle(d) { build(S.classes.find(c => c.id === d.id), true); },
   'save-heat': saveHeat,
+  rerun() { const c = cls(), hi = curHeat(c), h = c.heats[hi]; h.times = [null, null, null]; h.reruns = (h.reruns || 0) + 1; save(); render(); },
+  dnf(d) {
+    const ins = [...document.querySelectorAll('.lane input')], el = ins.find(i => i.dataset.lane === d.lane); if (!el) return;
+    el.value = 'DNF'; el.style.outline = '';
+    const nx = ins[ins.indexOf(el) + 1]; if (nx) { nx.focus(); nx.select(); } else el.focus();
+  },
   'clear-heat'() { const c = cls(), hi = curHeat(c); c.heats[hi].times = [null, null, null]; save(); render(); },
   prev() { const c = cls(); S.cur[c.id] = Math.max(0, curHeat(c) - 1); save(); render(); },
   next() { const c = cls(); S.cur[c.id] = Math.min(c.heats.length - 1, curHeat(c) + 1); save(); render(); },
@@ -613,6 +630,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'title') { S.title = t.value; save(); }
+  else if (t.id === 'dnft') { S.dnfTime = t.value; save(); }
   else if (t.id === 'maxw') { S.maxWeight = t.value; save(); document.querySelectorAll('input.wt').forEach(i => { const [cid, xid] = i.dataset.car.split(':'); i.classList.toggle('over', isOver(carOf(S.classes.find(c => c.id === cid), xid), S.maxWeight)); }); $('overbanner').innerHTML = overBanner(); }
   else if (t.dataset.rename) { S.classes.find(c => c.id === t.dataset.rename).name = t.value; save(); }
   else if (t.dataset.car) { const [cid, xid, f] = t.dataset.car.split(':'); const car = carOf(S.classes.find(c => c.id === cid), xid); car[f] = t.value; save(); if (f === 'weight') { t.classList.toggle('over', isOver(car, S.maxWeight)); $('overbanner').innerHTML = overBanner(); } }
